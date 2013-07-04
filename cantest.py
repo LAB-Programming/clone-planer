@@ -1,10 +1,10 @@
 from Tkinter import * #GUI library
-import tkFont #makes every thing look nice
+import tkFont #makes every thing look nice suplys diffrent fonts and such
 import sqlite3 #i use this to hold all of the data for the events
-import time #what do you think
+import datetime #what do you think
 import unidecode #GRRRRRRRRRR
 
-#Giovanni Rescigno : LAB-progaming
+#Giovanni Rescigno : LAB-progaming/clone computers
 #date started: 6/20/13
 #License: GPL 2.0 (complty open!!!!! have fun)
 
@@ -156,7 +156,7 @@ class DataReadRight:
 	
 			self.listofdata = self.listofdata + [self.smallerlist]
 
-		return timeing.rankData(self.listofdata, 4)
+		return timeing.rankData(self.listofdata, 21)
 
 	def openDatabase(self):
 
@@ -165,7 +165,7 @@ class DataReadRight:
 		
 class timeing:
 
-	def convertToTime(self, oldtime):
+	def convertToTime(self, oldtime): #converts 24 hour time to 12 hour time with AM or PM
 
 		if ((oldtime - int(oldtime)) != 0):
 			self.minets = int((oldtime - int(oldtime)) *100)
@@ -194,33 +194,60 @@ class timeing:
 	def rankData(self, listOfEvents, timeAlocated):
 
 		self.rankedlist = sorted(listOfEvents, key = lambda event: event[5])#sorts the events by their 'rank'
-		self.rankedlist.reverse()
+		self.rankedlist.reverse()#cnages the list form smallest to largest to largest to smallest 'rank'
 
-		self.amountOfTime = []
+		self.amountOfTime = []#list the corestponds to the list of events but holds the time that is alocated to each event
 
-		for i in range(len(self.rankedlist)):
+		for i in range(len(self.rankedlist)): #finds the time that is alocated to each event
 			self.amountOfTime = self.amountOfTime + [self.rankedlist[i][4] - self.rankedlist[i][3]]
 
 		self.startTimeOfEvent = 10
-		#self.endTimeOfEvent = 0
+		self.DayTimeStorage = timeAlocated
 		self.counter = 0
+		self.daysInFuture = 0
 
-		for i in range(len(self.rankedlist)):
 
-			self.rankedlist[i][3] = self.startTimeOfEvent
-			self.rankedlist[i][4] = self.startTimeOfEvent + self.amountOfTime[i]
-			self.startTimeOfEvent = self.rankedlist[i][4]
+		for self.counter in range(len(self.rankedlist)):
+			self.fulltime = 10
+
+			for i in range(self.counter+1):
+				self.fulltime = self.fulltime + self.amountOfTime[i]
+
+			if not(self.fulltime <= self.DayTimeStorage):
+				self.DayTimeStorage = self.DayTimeStorage + timeAlocated
+				self.startTimeOfEvent = 10
+				self.daysInFuture = self.daysInFuture + 1
+
+			#if self.fulltime <= self.DayTimeStorage:
+			self.rankedlist[self.counter][3] = self.startTimeOfEvent
+			self.rankedlist[self.counter][4] = self.startTimeOfEvent + self.amountOfTime[self.counter]
+			self.startTimeOfEvent = self.rankedlist[self.counter][4]
+			self.rankedlist[self.counter][2] = self.dateInDays(self.daysInFuture)
+			self.counter = self.counter + 1
+
+			
 
 		return self.rankedlist
 
+	def dateInDays(self, days):
+
+		#self.rawymd = str(time.strftime("%Y%m%d"))
+		#self.dateList = [self.rawymd[0:3], self.rawymd[4:6], self.rawymd[7:]]
+
+		return str(datetime.date.today() + datetime.timedelta(days=days))
+
+
+
 		
-root = Tk()
-root.title("clone planer")
-root.geometry("550x455")
+root = Tk()#Tk (GUI library) Object is created 
+root.title("clone planer") # title is made for the Tk Object
+root.geometry("550x455") #the size is created
+
+#other objects are created
 
 timeing = timeing()
 SQLdata = DataReadRight()
 Gui = mainGui(root)
 
 
-root.mainloop()
+root.mainloop()#run the GUI in a loop

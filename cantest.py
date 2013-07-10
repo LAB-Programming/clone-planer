@@ -28,7 +28,7 @@ class mainGui: #the class containg the Gui and handlers
 
 		for self.dataoflist in SQLdata.getDataFromSQLITE():
 
-			self.data.insert(END, " " + self.dataoflist[0])
+			self.data.insert(END, " " + self.dataoflist[1])
 
 
 	def listofdata(self, master):
@@ -53,7 +53,7 @@ class mainGui: #the class containg the Gui and handlers
 		self.addNewEvent = Button(self.buttonBox, text = "+")
 		self.addNewEvent.pack(side=LEFT, padx = 2)
 
-		self.distroyEvent = Button(self.buttonBox, text = "-")
+		self.distroyEvent = Button(self.buttonBox, text = "-", command=self.distoryButtonPress)
 		self.distroyEvent.pack(side=LEFT)
 
 	def viewerEvent(self, master):
@@ -126,17 +126,26 @@ class mainGui: #the class containg the Gui and handlers
 
 	def listhandler(self, event):
 
+		#global self.index
+
 		self.lisboxliss = event.widget #find the index of that list box
 		self.index = int(self.lisboxliss.curselection()[0])
 		#print self.index
 
 		self.listEvent = SQLdata.getDataFromSQLITE()[self.index]
 
-		self.EventName.set(self.listEvent[0])#gets the event name form the data base
-		self.dateOfEvent.set(self.listEvent[2])#gets the dat
-		self.startTimeData.set(timeing.convertToTime(self.listEvent[3])) #gets the start time and runs it though the time code
-		self.endTimeData.set(timeing.convertToTime(self.listEvent[4])) #gets the end time and same
-		self.location.set(self.listEvent[1])#gets the location of the event (you guessed it) from the data base
+		self.EventName.set(self.listEvent[1])#gets the event name form the data base
+		self.dateOfEvent.set(self.listEvent[3])#gets the dat
+		self.startTimeData.set(timeing.convertToTime(self.listEvent[4])) #gets the start time and runs it though the time code
+		self.endTimeData.set(timeing.convertToTime(self.listEvent[5])) #gets the end time and same
+		self.location.set(self.listEvent[2])#gets the location of the event (you guessed it) from the data base
+
+
+	def distoryButtonPress(self):#the selected event and delelets it
+
+		SQLdata.distoryFromData(self.listEvent[0])		
+
+
 
 class DataReadRight:
 
@@ -162,6 +171,20 @@ class DataReadRight:
 
 		self.EventData = sqlite3.connect('events.db')#connects to the db file giveing me the ablity to save and request data
 		self.selecter = self.EventData.cursor()#alows me to qeary the data in the .db file
+
+	def distoryFromData(self, index):
+
+		self.selecter.execute("DELETE FROM events WHERE indexEvent=" + str(index) + ";")
+		print index
+		self.EventData.commit()
+		self.EventData.close()
+		self.openDatabase()
+
+		Gui.data.delete(0, END)
+		
+		for self.dataoflist in self.getDataFromSQLITE():
+
+			Gui.data.insert(END, " " + self.dataoflist[1])
 		
 class timeing:
 
@@ -193,13 +216,13 @@ class timeing:
 
 	def rankData(self, listOfEvents, timeAlocated):
 
-		self.rankedlist = sorted(listOfEvents, key = lambda event: event[5])#sorts the events by their 'rank'
+		self.rankedlist = sorted(listOfEvents, key = lambda event: event[6])#sorts the events by their 'rank'
 		self.rankedlist.reverse()#cnages the list form smallest to largest to largest to smallest 'rank'
 
 		self.amountOfTime = []#list the corestponds to the list of events but holds the time that is alocated to each event
 
 		for i in range(len(self.rankedlist)): #finds the time that is alocated to each event
-			self.amountOfTime = self.amountOfTime + [self.rankedlist[i][4] - self.rankedlist[i][3]]
+			self.amountOfTime = self.amountOfTime + [self.rankedlist[i][5] - self.rankedlist[i][4]]
 
 		self.startTimeOfEvent = 10
 		self.DayTimeStorage = timeAlocated
@@ -219,14 +242,13 @@ class timeing:
 				self.daysInFuture = self.daysInFuture + 1
 
 			#if self.fulltime <= self.DayTimeStorage:
-			self.rankedlist[self.counter][3] = self.startTimeOfEvent
-			self.rankedlist[self.counter][4] = self.startTimeOfEvent + self.amountOfTime[self.counter]
+			self.rankedlist[self.counter][4] = self.startTimeOfEvent
+			self.rankedlist[self.counter][5] = self.startTimeOfEvent + self.amountOfTime[self.counter]
 			self.startTimeOfEvent = self.rankedlist[self.counter][4]
-			self.rankedlist[self.counter][2] = self.dateInDays(self.daysInFuture)
+			self.rankedlist[self.counter][3] = self.dateInDays(self.daysInFuture)
 			self.counter = self.counter + 1
 
-			
-
+		
 		return self.rankedlist
 
 	def dateInDays(self, days):
@@ -234,7 +256,8 @@ class timeing:
 		#self.rawymd = str(time.strftime("%Y%m%d"))
 		#self.dateList = [self.rawymd[0:3], self.rawymd[4:6], self.rawymd[7:]]
 
-		return str(datetime.date.today() + datetime.timedelta(days=days))
+		return str(datetime.date.today() + datetime.timedelta(days=days))#gives me the date for the amount of days forward "days"
+
 
 
 

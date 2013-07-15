@@ -50,7 +50,7 @@ class mainGui: #the class containg the Gui and handlers
 		self.buttonBox = Frame(master)
 		self.buttonBox.grid(row = 1, column = 0, sticky = W)
 
-		self.addNewEvent = Button(self.buttonBox, text = "+")
+		self.addNewEvent = Button(self.buttonBox, text = "+", command = self.entryForm)
 		self.addNewEvent.pack(side=LEFT, padx = 2)
 
 		self.distroyEvent = Button(self.buttonBox, text = "-", command=self.distoryButtonPress)
@@ -115,12 +115,57 @@ class mainGui: #the class containg the Gui and handlers
 		self.locationData = Label(self.localdata, textvariable = self.location)
 		self.locationData.pack(side = LEFT, padx = 5)
 
-
 		self.buttonboxinfo = Frame(master)
 		self.buttonboxinfo.pack(side=BOTTOM, fill = X)
 
 		self.editButton = Button(self.buttonboxinfo, text = "Edit")
 		self.editButton.pack(side = RIGHT)
+
+	def entryForm(self):
+
+		self.eventform = Toplevel()
+		self.eventform.title("new event")
+		self.eventform.geometry("270x200")
+
+		self.form = Frame(self.eventform)
+		self.form.pack(fill=X, padx = 5, pady = 5)
+
+		self.labelForTitle = Label(self.form, text = "Title: ")
+		self.labelForTitle.grid(column = 0, row = 0, pady = 5, sticky = W)
+
+		self.EntryForTitle = Entry(self.form)
+		self.EntryForTitle.grid(column = 1, row = 0)
+
+		self.labelForLocation = Label(self.form, text = "Location: ")
+		self.labelForLocation.grid(column = 0, row = 1, pady = 5, sticky = W)
+
+		self.EntryForLocation = Entry(self.form)
+		self.EntryForLocation.grid(column = 1, row = 1)
+
+		self.labelForTime = Label(self.form, text = "time taken: ")
+		self.labelForTime.grid(column = 0, row = 2, pady = 5, sticky = W)
+
+
+		self.timeFrame = Frame(self.form)
+		self.timeFrame .grid(column = 1, row = 2, sticky = W)
+
+		self.timeHours = Entry(self.timeFrame, width = 2)
+		self.timeHours.grid(column = 0, row = 0)
+
+		self.seporator = Label(self.timeFrame, text = " : ")
+		self.seporator.grid(column = 1, row = 0)
+
+		self.timeMinets = Entry(self.timeFrame, width = 2)
+		self.timeMinets.grid(column = 2, row = 0)
+
+
+		self.labelForRank = Label(self.form, text = "rank: ")
+		self.labelForRank.grid(column = 0, row = 3, pady = 5, sticky = W)
+
+		self.rankOfEvent = StringVar()
+
+		self.optionRank = OptionMenu(self.form, self.rankOfEvent , "1", "2", "3", "4")
+		self.optionRank.grid(column = 1, row = 3, sticky = W)
 
 	##############handlers##############
 
@@ -181,7 +226,6 @@ class DataReadRight:
 		self.openDatabase()
 
 		Gui.data.delete(0, END)
-		
 		for self.dataoflist in self.getDataFromSQLITE():
 
 			Gui.data.insert(END, " " + self.dataoflist[1])

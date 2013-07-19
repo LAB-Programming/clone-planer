@@ -3,6 +3,7 @@ import tkFont #makes every thing look nice suplys diffrent fonts and such
 import sqlite3 #i use this to hold all of the data for the events
 import datetime #what do you think
 import unidecode #GRRRRRRRRRR
+import tkMessageBox # so i can pop error messages up and such
 
 #Giovanni Rescigno : LAB-progaming/clone computers
 #date started: 6/20/13
@@ -50,7 +51,7 @@ class mainGui: #the class containg the Gui and handlers
 		self.buttonBox = Frame(master)
 		self.buttonBox.grid(row = 1, column = 0, sticky = W)
 
-		self.addNewEvent = Button(self.buttonBox, text = "+", command = self.entryForm)
+		self.addNewEvent = Button(self.buttonBox, text = "+", command = self.AddButtonPress)
 		self.addNewEvent.pack(side=LEFT, padx = 2)
 
 		self.distroyEvent = Button(self.buttonBox, text = "-", command=self.distoryButtonPress)
@@ -121,11 +122,16 @@ class mainGui: #the class containg the Gui and handlers
 		self.editButton = Button(self.buttonboxinfo, text = "Edit")
 		self.editButton.pack(side = RIGHT)
 
-	def entryForm(self):
+	def entryForm(self, kind):
+
+		if (kind == "new"):
+			self.entryKind = "new event"
+		else:
+			self.entryKind = "edit event"
 
 		self.eventform = Toplevel()
-		self.eventform.title("new event")
-		self.eventform.geometry("270x200")
+		self.eventform.title(self.entryKind)
+		self.eventform.geometry("270x165")
 
 		self.form = Frame(self.eventform)
 		self.form.pack(fill=X, padx = 5, pady = 5)
@@ -133,13 +139,15 @@ class mainGui: #the class containg the Gui and handlers
 		self.labelForTitle = Label(self.form, text = "Title: ")
 		self.labelForTitle.grid(column = 0, row = 0, pady = 5, sticky = W)
 
-		self.EntryForTitle = Entry(self.form)
+		self.title = StringVar()
+		self.EntryForTitle = Entry(self.form, textvariable = self.title)
 		self.EntryForTitle.grid(column = 1, row = 0)
 
 		self.labelForLocation = Label(self.form, text = "Location: ")
 		self.labelForLocation.grid(column = 0, row = 1, pady = 5, sticky = W)
 
-		self.EntryForLocation = Entry(self.form)
+		self.locationName = StringVar()
+		self.EntryForLocation = Entry(self.form, textvariable = self.locationName)
 		self.EntryForLocation.grid(column = 1, row = 1)
 
 		self.labelForTime = Label(self.form, text = "time taken: ")
@@ -149,13 +157,15 @@ class mainGui: #the class containg the Gui and handlers
 		self.timeFrame = Frame(self.form)
 		self.timeFrame .grid(column = 1, row = 2, sticky = W)
 
-		self.timeHours = Entry(self.timeFrame, width = 2)
+		self.timeInHours = StringVar()
+		self.timeHours = Entry(self.timeFrame, width = 2, textvariable = self.timeInHours)
 		self.timeHours.grid(column = 0, row = 0)
 
 		self.seporator = Label(self.timeFrame, text = " : ")
 		self.seporator.grid(column = 1, row = 0)
 
-		self.timeMinets = Entry(self.timeFrame, width = 2)
+		self.timeInMinets = StringVar()
+		self.timeMinets = Entry(self.timeFrame, width = 2, textvariable = self.timeInMinets)
 		self.timeMinets.grid(column = 2, row = 0)
 
 
@@ -163,9 +173,11 @@ class mainGui: #the class containg the Gui and handlers
 		self.labelForRank.grid(column = 0, row = 3, pady = 5, sticky = W)
 
 		self.rankOfEvent = StringVar()
-
 		self.optionRank = OptionMenu(self.form, self.rankOfEvent , "1", "2", "3", "4")
 		self.optionRank.grid(column = 1, row = 3, sticky = W)
+
+		self.submitButton = Button(self.form, text = "submit", command = self.SubmitHandler)
+		self.submitButton.grid(column = 1, row = 4, sticky = E)
 
 	##############handlers##############
 
@@ -188,7 +200,37 @@ class mainGui: #the class containg the Gui and handlers
 
 	def distoryButtonPress(self):#the selected event and delelets it
 
-		SQLdata.distoryFromData(self.listEvent[0])		
+		SQLdata.distoryFromData(self.listEvent[0])
+
+	def AddButtonPress(self):
+
+		self.entryForm("new")
+
+	def SubmitHandler(self):
+
+		self.titleOfThisEvent = self.title.get()
+		self.LocationOfThisEvent = self.locationName.get()
+		self.TimeHoursOfThisEvent = self.timeInHours.get()
+		self.TimeMinetsOfThisEvent = self.timeInMinets.get()
+		self.rankOfThisEvent = int(self.rankOfEvent.get()) 
+
+		try:#if the number can not be converted in to an int it will throw an error and return
+			self.TimeHoursOfThisEvent = int(self.TimeHoursOfThisEvent)
+			self.TimeMinetsOfThisEvent = int(self.TimeMinetsOfThisEvent)
+		except:
+			tkMessageBox.showinfo("Error", "Time Value Not a Number!")
+			return
+		if self.titleOfThisEvent == "" or self.LocationOfThisEvent == "":#checks to see if the Entrys are empty
+			tkMessageBox.showinfo("Error", "Text Field Empty!")
+			return
+		if self.TimeMinetsOfThisEvent >= 60:
+			tkMessageBox.showinfo("Error", "only up to 59 minets!")
+			return
+
+		self.endTimeOfThisEvent = self.TimeHoursOfThisEvent + (self.TimeMinetsOfThisEvent / 100.0)#finds the amount of time 
+		print self.endTimeOfThisEvent
+		self.listOfNewDataOfNewEvent = [self.titleOfThisEvent, self.LocationOfThisEvent, 0, self.endTimeOfThisEvent, self.rankOfThisEvent]
+		SQLdata.addFromData(self.listOfNewDataOfNewEvent)
 
 
 
@@ -229,6 +271,21 @@ class DataReadRight:
 		for self.dataoflist in self.getDataFromSQLITE():
 
 			Gui.data.insert(END, " " + self.dataoflist[1])
+
+	def addFromData(self, listOfData):
+
+		self.newIndex = len(self.getDataFromSQLITE())
+		self.selecter.execute("INSERT INTO events VALUES ( '%s','%s','%s','%s','%s','%s','%s');" % ( self.newIndex, listOfData[0],
+			listOfData[1], "9-9-13", listOfData[2], listOfData[3], listOfData[4]))
+
+		self.EventData.commit()
+		self.EventData.close()
+		self.openDatabase()
+
+		Gui.data.delete(0, END)
+		for self.dataoflist in self.getDataFromSQLITE():
+
+			Gui.data.insert(END, " " + self.dataoflist[1])
 		
 class timeing:
 
@@ -260,6 +317,7 @@ class timeing:
 
 	def rankData(self, listOfEvents, timeAlocated):
 
+
 		self.rankedlist = sorted(listOfEvents, key = lambda event: event[6])#sorts the events by their 'rank'
 		self.rankedlist.reverse()#cnages the list form smallest to largest to largest to smallest 'rank'
 
@@ -272,23 +330,24 @@ class timeing:
 		self.DayTimeStorage = timeAlocated
 		self.counter = 0
 		self.daysInFuture = 0
-
-
+		self.timeCounter = 0
+		
 		for self.counter in range(len(self.rankedlist)):
-			self.fulltime = 10
-
+			self.fulltime2 = 10
+			
 			for i in range(self.counter+1):
-				self.fulltime = self.fulltime + self.amountOfTime[i]
+				self.fulltime2 = (self.fulltime2 - self.timeCounter) + self.amountOfTime[i]
 
-			if not(self.fulltime <= self.DayTimeStorage):
-				self.DayTimeStorage = self.DayTimeStorage + timeAlocated
+			if not(self.fulltime2 <= self.DayTimeStorage):
 				self.startTimeOfEvent = 10
 				self.daysInFuture = self.daysInFuture + 1
+				self.timeCounter = self.fulltime2
+				self.fulltime2 = 0
 
 			#if self.fulltime <= self.DayTimeStorage:
 			self.rankedlist[self.counter][4] = self.startTimeOfEvent
 			self.rankedlist[self.counter][5] = self.startTimeOfEvent + self.amountOfTime[self.counter]
-			self.startTimeOfEvent = self.rankedlist[self.counter][4]
+			self.startTimeOfEvent = self.rankedlist[self.counter][5]
 			self.rankedlist[self.counter][3] = self.dateInDays(self.daysInFuture)
 			self.counter = self.counter + 1
 

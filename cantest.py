@@ -119,15 +119,34 @@ class mainGui: #the class containg the Gui and handlers
 		self.buttonboxinfo = Frame(master)
 		self.buttonboxinfo.pack(side=BOTTOM, fill = X)
 
-		self.editButton = Button(self.buttonboxinfo, text = "Edit")
+		self.editButton = Button(self.buttonboxinfo, text = "Edit", command = self.EditButtonPress)
 		self.editButton.pack(side = RIGHT)
 
 	def entryForm(self, kind):
+
+		self.title = StringVar()
+		self.locationName = StringVar()
+		self.timeInHours = StringVar()
+		self.rankOfEvent = StringVar()
+		self.timeInMinets = StringVar()
+
+		self.kind = kind
 
 		if (kind == "new"):
 			self.entryKind = "new event"
 		else:
 			self.entryKind = "edit event"
+
+			self.indexOfEditedEvent = self.listEvent[0]
+			self.title.set(self.listEvent[1])
+			self.locationName.set(self.listEvent[2])
+
+			self.amountOfTimeTaken = self.listEvent[5] - self.listEvent[4]
+			self.amountOfTimeTaken = str(self.amountOfTimeTaken).split(".")
+
+			self.timeInHours.set(self.amountOfTimeTaken[0])
+			self.timeInMinets.set(self.amountOfTimeTaken[1])
+			self.rankOfEvent.set(int(self.listEvent[6]))
 
 		self.eventform = Toplevel()
 		self.eventform.title(self.entryKind)
@@ -139,40 +158,35 @@ class mainGui: #the class containg the Gui and handlers
 		self.labelForTitle = Label(self.form, text = "Title: ")
 		self.labelForTitle.grid(column = 0, row = 0, pady = 5, sticky = W)
 
-		self.title = StringVar()
 		self.EntryForTitle = Entry(self.form, textvariable = self.title)
 		self.EntryForTitle.grid(column = 1, row = 0)
 
 		self.labelForLocation = Label(self.form, text = "Location: ")
 		self.labelForLocation.grid(column = 0, row = 1, pady = 5, sticky = W)
 
-		self.locationName = StringVar()
 		self.EntryForLocation = Entry(self.form, textvariable = self.locationName)
 		self.EntryForLocation.grid(column = 1, row = 1)
 
 		self.labelForTime = Label(self.form, text = "time taken: ")
 		self.labelForTime.grid(column = 0, row = 2, pady = 5, sticky = W)
 
-
 		self.timeFrame = Frame(self.form)
 		self.timeFrame .grid(column = 1, row = 2, sticky = W)
 
-		self.timeInHours = StringVar()
+		
 		self.timeHours = Entry(self.timeFrame, width = 2, textvariable = self.timeInHours)
 		self.timeHours.grid(column = 0, row = 0)
 
 		self.seporator = Label(self.timeFrame, text = " : ")
 		self.seporator.grid(column = 1, row = 0)
 
-		self.timeInMinets = StringVar()
+		
 		self.timeMinets = Entry(self.timeFrame, width = 2, textvariable = self.timeInMinets)
 		self.timeMinets.grid(column = 2, row = 0)
-
 
 		self.labelForRank = Label(self.form, text = "rank: ")
 		self.labelForRank.grid(column = 0, row = 3, pady = 5, sticky = W)
 
-		self.rankOfEvent = StringVar()
 		self.optionRank = OptionMenu(self.form, self.rankOfEvent , "1", "2", "3", "4")
 		self.optionRank.grid(column = 1, row = 3, sticky = W)
 
@@ -206,6 +220,10 @@ class mainGui: #the class containg the Gui and handlers
 
 		self.entryForm("new")
 
+	def EditButtonPress(self):
+
+		self.entryForm("edit")
+
 	def SubmitHandler(self):
 
 		self.titleOfThisEvent = self.title.get()
@@ -231,6 +249,11 @@ class mainGui: #the class containg the Gui and handlers
 		print self.endTimeOfThisEvent
 		self.listOfNewDataOfNewEvent = [self.titleOfThisEvent, self.LocationOfThisEvent, 0, self.endTimeOfThisEvent, self.rankOfThisEvent]
 		SQLdata.addFromData(self.listOfNewDataOfNewEvent)
+
+		if not(self.kind == "new"):
+
+			SQLdata.distoryFromData(self.indexOfEditedEvent)
+
 
 
 

@@ -10,7 +10,6 @@ import tkMessageBox # so i can pop error messages up and such
 #License: GPL 2.0 (complty open!!!!! have fun)
 
 
-
 class mainGui: #the class containg the Gui and handlers
 
 	def __init__(self, master):
@@ -30,7 +29,6 @@ class mainGui: #the class containg the Gui and handlers
 		for self.dataoflist in SQLdata.getDataFromSQLITE():
 
 			self.data.insert(END, " " + self.dataoflist[1])
-
 
 	def listofdata(self, master):
 
@@ -73,7 +71,7 @@ class mainGui: #the class containg the Gui and handlers
 
 		self.CheckVar1 = IntVar()#holds the state of the check box
 		self.finnished = Checkbutton(self.topFrame, text = "Done", variable = self.CheckVar1, 
-			onvalue = 1, offvalue = 0)
+			onvalue = 1, offvalue = 0, command = self.DoneButtonPressed)
 		self.finnished.pack(side = RIGHT)
 
 		self.hr = Frame(master, bg = "black", height = 2, width = 350)
@@ -193,6 +191,19 @@ class mainGui: #the class containg the Gui and handlers
 		self.submitButton = Button(self.form, text = "submit", command = self.SubmitHandler)
 		self.submitButton.grid(column = 1, row = 4, sticky = E)
 
+	def getBiggestIndex(self):
+
+		self.largestIndexList = SQLdata.getDataFromSQLITE()
+		self.ListOfIndexs = []
+
+		for i in self.largestIndexList:
+			self.ListOfIndexs = self.ListOfIndexs + [int(i[0])]
+
+		self.ListOfIndexs.sort()
+		self.ListOfIndexs.reverse()
+
+		return self.ListOfIndexs[0]
+
 	##############handlers##############
 
 	def listhandler(self, event):
@@ -246,7 +257,7 @@ class mainGui: #the class containg the Gui and handlers
 			return
 
 		self.endTimeOfThisEvent = self.TimeHoursOfThisEvent + (self.TimeMinetsOfThisEvent / 100.0)#finds the amount of time 
-		print self.endTimeOfThisEvent
+		#print self.endTimeOfThisEvent
 		self.listOfNewDataOfNewEvent = [self.titleOfThisEvent, self.LocationOfThisEvent, 0, self.endTimeOfThisEvent, self.rankOfThisEvent]
 		SQLdata.addFromData(self.listOfNewDataOfNewEvent)
 
@@ -254,7 +265,24 @@ class mainGui: #the class containg the Gui and handlers
 
 			SQLdata.distoryFromData(self.indexOfEditedEvent)
 
+	def DoneButtonPressed(self):
 
+		self.timeTakenByEvent = self.listEvent[5] - self.listEvent[4] 
+		self.checksFile = open("checks.txt", "r")#opens file for reading
+
+		self.ListOfChecks = self.checksFile.read()
+		self.checksFile.close()
+		self.ListOfChecks = self.ListOfChecks.split(", ")
+
+		if self.ListOfChecks[0] != str(datetime.date.today()):
+			self.ListOfChecks[1] = int(self.ListOfChecks[1]) + 1
+
+		self.checksFile = open("checks.txt", "w+")#opens file for wrihgting
+		self.ListOfChecks[2] = int(self.ListOfChecks[2]) + self.timeTakenByEventx
+		self.checksFile.write(str(datetime.date.today()) + ", " + str(int(self.ListOfChecks[1])) + ", " + str(int(self.ListOfChecks[2])))#writes the data to the txt
+
+		self.checksFile.close()
+		SQLdata.distoryFromData(self.listEvent[0])#distorys event that is finnished
 
 
 class DataReadRight:
@@ -262,6 +290,19 @@ class DataReadRight:
 	def __init__(self):
 
 		self.openDatabase()
+
+	def getAvrage(self):
+
+		self.checksFile = open("checks.txt", "r")
+
+		self.ListOfAvrage = self.checksFile.read()
+		self.ListOfAvrage = self.ListOfAvrage.split(", ")
+
+		self.average = int(self.ListOfAvrage[2]) / int(self.ListOfAvrage[1])
+		self.checksFile.close()
+
+		return self.average + 10
+		
 		
 	def getDataFromSQLITE(self):
 
@@ -275,7 +316,7 @@ class DataReadRight:
 	
 			self.listofdata = self.listofdata + [self.smallerlist]
 
-		return timeing.rankData(self.listofdata, 21)
+		return timeing.rankData(self.listofdata, self.getAvrage())
 
 	def openDatabase(self):
 
@@ -285,7 +326,6 @@ class DataReadRight:
 	def distoryFromData(self, index):
 
 		self.selecter.execute("DELETE FROM events WHERE indexEvent=" + str(index) + ";")
-		print index
 		self.EventData.commit()
 		self.EventData.close()
 		self.openDatabase()
@@ -297,7 +337,7 @@ class DataReadRight:
 
 	def addFromData(self, listOfData):
 
-		self.newIndex = len(self.getDataFromSQLITE())
+		self.newIndex = Gui.getBiggestIndex() + 1
 		self.selecter.execute("INSERT INTO events VALUES ( '%s','%s','%s','%s','%s','%s','%s');" % ( self.newIndex, listOfData[0],
 			listOfData[1], "9-9-13", listOfData[2], listOfData[3], listOfData[4]))
 
@@ -397,6 +437,5 @@ root.geometry("550x455") #the size is created
 timeing = timeing()
 SQLdata = DataReadRight()
 Gui = mainGui(root)
-
 
 root.mainloop()#run the GUI in a loop

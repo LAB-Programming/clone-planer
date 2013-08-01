@@ -277,8 +277,8 @@ class mainGui: #the class containg the Gui and handlers
 		if self.ListOfChecks[0] != str(datetime.date.today()):
 			self.ListOfChecks[1] = int(self.ListOfChecks[1]) + 1
 
-		self.checksFile = open("checks.txt", "w+")#opens file for wrihgting
-		self.ListOfChecks[2] = int(self.ListOfChecks[2]) + self.timeTakenByEventx
+		self.checksFile = open("checks.txt", "w")#opens file for wrihgting
+		self.ListOfChecks[2] = int(self.ListOfChecks[2]) + self.timeTakenByEvent
 		self.checksFile.write(str(datetime.date.today()) + ", " + str(int(self.ListOfChecks[1])) + ", " + str(int(self.ListOfChecks[2])))#writes the data to the txt
 
 		self.checksFile.close()
@@ -393,18 +393,17 @@ class timeing:
 		self.DayTimeStorage = timeAlocated
 		self.counter = 0
 		self.daysInFuture = 0
-		self.timeCounter = 0
 		
 		for self.counter in range(len(self.rankedlist)):
 			self.fulltime2 = 10
 			
-			for i in range(self.counter+1):
-				self.fulltime2 = (self.fulltime2 - self.timeCounter) + self.amountOfTime[i]
+			for i in range(self.counter):
+				self.fulltime2 = self.fulltime2 + self.amountOfTime[i]
+				print self.fulltime2
 
 			if not(self.fulltime2 <= self.DayTimeStorage):
 				self.startTimeOfEvent = 10
 				self.daysInFuture = self.daysInFuture + 1
-				self.timeCounter = self.fulltime2
 				self.fulltime2 = 0
 
 			#if self.fulltime <= self.DayTimeStorage:
